@@ -68,6 +68,23 @@ message(STATUS "ORRBEC : ${HOST_PLATFORM}")
 set(ORBBEC_OPENNI2_REDIST
   "${CMAKE_CURRENT_SOURCE_DIR}/openni2_redist/${HOST_PLATFORM}")
 
+message(STATUS "${LIB_NAME} Ros version : $ENV{ROS_DISTRO}")
+if ($ENV{ROS_DISTRO} MATCHES "iron")
+  add_definitions(-DUSE_IRON_VERSION)
+elseif ($ENV{ROS_DISTRO} MATCHES "humble")
+  add_definitions(-DUSE_HUMBLE_VERSION)
+elseif ($ENV{ROS_DISTRO} MATCHES "foxy")
+  add_definitions(-DUSE_FOXY_VERSION)
+elseif ($ENV{ROS_DISTRO} MATCHES "eloquent")
+  add_definitions(-DUSE_ELOQUENT_VERSION)
+elseif ($ENV{ROS_DISTRO} MATCHES "dashing")
+  add_definitions(-DUSE_DASHING_VERSION)
+elseif ($ENV{ROS_DISTRO} MATCHES "noetic")
+  add_definitions(-DUSE_ROS_NORTIC_VERSION)
+elseif ($ENV{ROS_DISTRO} MATCHES "melodic")
+  add_definitions(-DUSE_ROS_MELODIC_VERSION)
+endif()
+
 set(dependencies
   ament_index_cpp
   astra_camera_msgs

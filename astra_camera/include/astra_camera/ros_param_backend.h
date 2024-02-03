@@ -19,7 +19,12 @@ class ParametersBackend {
   explicit ParametersBackend(rclcpp::Node* node);
   ~ParametersBackend();
   void addOnSetParametersCallback(
-      rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType callback);
+#if defined(USE_IRON_VERSION)
+      rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType callback
+#else
+      rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType callback
+#endif
+  );
 
  private:
   rclcpp::Node* node_;

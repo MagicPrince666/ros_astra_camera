@@ -24,7 +24,12 @@ ParametersBackend::~ParametersBackend() {
 }
 
 void ParametersBackend::addOnSetParametersCallback(
-    rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType callback) {
+#if defined(USE_IRON_VERSION)
+    rclcpp::node_interfaces::NodeParametersInterface::OnSetParametersCallbackType callback
+#else
+    rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType callback
+#endif
+    ) {
   ros_callback_ = node_->add_on_set_parameters_callback(callback);
 }
 
