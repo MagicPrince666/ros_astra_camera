@@ -24,7 +24,6 @@ find_package(cv_bridge REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(camera_info_manager REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(glog REQUIRED)
 find_package(image_geometry REQUIRED)
 find_package(image_publisher REQUIRED)
 find_package(image_transport REQUIRED)
@@ -44,6 +43,11 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_sensor_msgs REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(LIBUVC REQUIRED libuvc)
+pkg_search_module(GLOG REQUIRED libglog)
+
+if (NOT GLOG_FOUND)
+  message(FATAL_ERROR "glog is not found")
+endif ()
 
 execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
 execute_process(COMMAND getconf LONG_BIT OUTPUT_VARIABLE MACHINES_BIT)
@@ -111,6 +115,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   ${OpenCV_INCLUDED_DIRS}
+  ${GLOG_INCLUDED_DIRS}
   )
 
 ament_target_dependencies(${PROJECT_NAME}
@@ -119,7 +124,7 @@ ament_target_dependencies(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${OpenCV_LIBS}
   Eigen3::Eigen
-  glog
+  ${GLOG_LIBRARIES}
   ${magic_enum_LIBRARIES}
   uvc
   -lOpenNI2
@@ -142,7 +147,7 @@ ament_target_dependencies(list_devices_node
 target_link_libraries(list_devices_node
   ${OpenCV_LIBS}
   Eigen3::Eigen
-  glog
+  ${GLOG_LIBRARIES}
   ${magic_enum_LIBRARIES}
   uvc
   -lOpenNI2
