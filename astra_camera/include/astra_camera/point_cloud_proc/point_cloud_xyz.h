@@ -50,6 +50,7 @@ namespace enc = sensor_msgs::image_encodings;
 class PointCloudXyzNode : public rclcpp::Node {
  public:
   explicit PointCloudXyzNode(const rclcpp::NodeOptions& options);
+  ~PointCloudXyzNode();
 
   template <typename T>
   static void convertDepth(const sensor_msgs::msg::Image::ConstSharedPtr& depth_msg,
@@ -77,5 +78,47 @@ class PointCloudXyzNode : public rclcpp::Node {
 
   rclcpp::Logger logger_ = rclcpp::get_logger("PointCloudXyzNode");
 };
+
+template <typename T>
+void PointCloudXyzNode::convertDepth(const sensor_msgs::msg::Image::ConstSharedPtr &depth_msg,
+                                     sensor_msgs::msg::PointCloud2::SharedPtr &cloud_msg,
+                                     const image_geometry::PinholeCameraModel &model,
+                                     double range_max) {
+  // Use correct principal point from calibration
+  auto center_x = static_cast<float>(model.cx());
+  auto center_y = static_cast<float>(model.cy());
+
+  // Combine unit conversion (if necessary) with scaling by focal length for computing (X,Y)
+  double unit_scaling = DepthTraits<T>::toMeters(T(1));
+  auto constant_x = static_cast<float>(unit_scaling / model.fx());
+  auto constant_y = static_cast<float>(unit_scaling / model.fy());
+  float bad_point = std::numeric_limits<float>::quiet_NaN();
+
+  sensor_msgs::PointCloud2Iterator<float> iter_x(*cloud_msg, "x");
+  sensor_msgs::PointCloud2Iterator<float> iter_y(*cloud_msg, "y");
+  sensor_msgs::PointCloud2Iterator<float> iter_z(*cloud_msg, "z");
+  const T *depth_row = reinterpret_cast<const T *>(&depth_msg->data[0]);
+  int row_step = depth_msg->step / sizeof(T);
+  for (int v = 0; v < static_cast<int>(cloud_msg->height); ++v, depth_row += row_step) {
+    for (int u = 0; u < static_cast<int>(cloud_msg->width); ++u, ++iter_x, ++iter_y, ++iter_z) {
+      T depth = depth_row[u];
+
+      // Missing points denoted by NaNs
+      if (!DepthTraits<T>::valid(depth)) {
+        if (range_max != 0.0) {
+          depth = DepthTraits<T>::fromMeters(range_max);
+        } else {
+          *iter_x = *iter_y = *iter_z = bad_point;
+          continue;
+        }
+      }
+
+      // Fill in XYZ
+      *iter_x = (static_cast<float>(u) - center_x) * depth * constant_x;
+      *iter_y = (static_cast<float>(v) - center_y) * depth * constant_y;
+      *iter_z = DepthTraits<T>::toMeters(depth);
+    }
+  }
+}
 
 }  // namespace astra_camera
