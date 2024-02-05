@@ -10,6 +10,7 @@
 /*                                                                        */
 /**************************************************************************/
 #include "astra_camera/dynamic_params.h"
+#include "astra_camera/utils.h"
 
 namespace astra_camera {
 
@@ -38,11 +39,15 @@ Parameters::Parameters(rclcpp::Node *node)
 
 Parameters::~Parameters() noexcept {
   for (auto const &param : param_functions_) {
+#if defined(USE_ELOQUENT_VERSION) || defined(USE_DASHING_VERSION)
+    node_->undeclare_parameter(param.first);
+#else
     try {
       node_->undeclare_parameter(param.first);
     } catch (const rclcpp::exceptions::InvalidParameterTypeException &e) {
       RCLCPP_ERROR_STREAM(logger_, e.what());
     }
+#endif 
   }
 }
 

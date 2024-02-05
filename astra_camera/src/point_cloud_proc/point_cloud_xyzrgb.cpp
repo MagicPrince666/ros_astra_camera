@@ -30,8 +30,6 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 #include <rclcpp/rclcpp.hpp>
-#include <image_transport/image_transport.hpp>
-#include <image_transport/subscriber_filter.hpp>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/exact_time.h>
@@ -47,6 +45,8 @@
 #include <string>
 #include <vector>
 #include "astra_camera/point_cloud_proc/point_cloud_xyzrgb.h"
+#include "astra_camera/utils.h"
+
 namespace astra_camera {
 
 PointCloudXyzrgbNode::PointCloudXyzrgbNode(const rclcpp::NodeOptions& options)
@@ -169,10 +169,11 @@ void PointCloudXyzrgbNode::imageCb(const Image::ConstSharedPtr& depth_msg,
     } else {
       rgb_msg = cv_bridge::toCvCopy(cv_rsz.toImageMsg(), enc::RGB8)->toImageMsg();
     }
-
+#if !defined(USE_ELOQUENT_VERSION) && !defined(USE_DASHING_VERSION)
     RCLCPP_ERROR_THROTTLE(logger_, *get_clock(), 50000,
                           "Depth resolution (%ux%u) does not match RGB resolution (%ux%u)",
                           depth_msg->width, depth_msg->height, rgb_msg->width, rgb_msg->height);
+#endif
     return;
   } else {
     rgb_msg = rgb_msg_in;

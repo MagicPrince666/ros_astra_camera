@@ -11,6 +11,7 @@
 /**************************************************************************/
 
 #include "astra_camera/ob_timer_filter.h"
+#include <numeric>
 
 namespace astra_camera {
 OBTimerFilter::OBTimerFilter(std::size_t buffer_len)

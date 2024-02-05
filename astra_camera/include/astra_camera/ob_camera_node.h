@@ -14,7 +14,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <magic_enum.hpp>
+#include "magic_enum/magic_enum.hpp"
 
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -27,8 +27,13 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/distortion_models.hpp>
 
+#if defined(USE_ELOQUENT_VERSION) || defined(USE_DASHING_VERSION)
+#include <image_transport/image_transport.h>
+#include <camera_info_manager/camera_info_manager.h>
+#else
 #include <image_transport/image_transport.hpp>
 #include <camera_info_manager/camera_info_manager.hpp>
+#endif
 
 #include <openni2/OpenNI.h>
 #include <openni2/PS1080.h>

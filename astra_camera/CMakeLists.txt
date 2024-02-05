@@ -28,7 +28,6 @@ find_package(image_geometry REQUIRED)
 find_package(image_publisher REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(libuvc REQUIRED)
-find_package(magic_enum REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -142,7 +141,6 @@ target_link_libraries(${PROJECT_NAME}
   ${OpenCV_LIBS}
   Eigen3::Eigen
   ${GLOG_LIBRARIES}
-  ${magic_enum_LIBRARIES}
   uvc
   -lOpenNI2
   -L${ORBBEC_OPENNI2_REDIST}
@@ -165,7 +163,6 @@ target_link_libraries(list_devices_node
   ${OpenCV_LIBS}
   Eigen3::Eigen
   ${GLOG_LIBRARIES}
-  ${magic_enum_LIBRARIES}
   uvc
   -lOpenNI2
   -L${ORBBEC_OPENNI2_REDIST}

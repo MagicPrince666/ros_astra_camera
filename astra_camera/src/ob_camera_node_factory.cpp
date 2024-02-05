@@ -10,7 +10,11 @@
 /*                                                                        */
 /**************************************************************************/
 
+#if defined(USE_ELOQUENT_VERSION) || defined(USE_DASHING_VERSION)
+#include <experimental/filesystem>
+#else
 #include <filesystem>
+#endif
 #include <fcntl.h>
 #include "astra_camera/ob_camera_node_factory.h"
 #include <semaphore.h>
@@ -53,7 +57,9 @@ void OBCameraNodeFactory::cleanUpSharedMemory() {
 void OBCameraNodeFactory::queryDeviceThread() {
   while (rclcpp::ok() && is_alive_) {
     if (!device_connected_) {
+#if !defined(USE_ELOQUENT_VERSION) && !defined(USE_DASHING_VERSION)
       RCLCPP_INFO_STREAM_THROTTLE(logger_, *get_clock(), 1000, "Waiting for device connection...");
+#endif
       auto device_list = ob_context_->queryDeviceList();
       for (auto& device_info : device_list) {
         onDeviceConnected(&device_info);

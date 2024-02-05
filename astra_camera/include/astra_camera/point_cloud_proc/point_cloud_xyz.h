@@ -32,7 +32,11 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
+#if defined(USE_ELOQUENT_VERSION) || defined(USE_DASHING_VERSION)
+#include <image_transport/image_transport.h>
+#else
 #include <image_transport/image_transport.hpp>
+#endif
 #include <sensor_msgs/image_encodings.hpp>
 #include <image_geometry/pinhole_camera_model.h>
 #include <sensor_msgs/point_cloud2_iterator.hpp>

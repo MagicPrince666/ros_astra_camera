@@ -28,6 +28,65 @@
 #include "astra_camera_msgs/msg/extrinsics.hpp"
 #include "dynamic_params.h"
 
+#if defined(USE_ELOQUENT_VERSION) || defined(USE_DASHING_VERSION)
+#define RCLCPP_WARN_STREAM(logger, stream_arg) \
+  do { \
+    static_assert( \
+      ::std::is_same<typename std::remove_cv<typename std::remove_reference<decltype(logger)>::type>::type, \
+      typename ::rclcpp::Logger>::value, \
+      "First argument to logging macros must be an rclcpp::Logger"); \
+ \
+    std::stringstream rclcpp_stream_ss_; \
+    rclcpp_stream_ss_ << stream_arg; \
+    RCUTILS_LOG_WARN_NAMED( \
+      (logger).get_name(), \
+      "%s", rclcpp_stream_ss_.str().c_str()); \
+  } while (0)
+
+#define RCLCPP_ERROR_STREAM(logger, stream_arg) \
+  do { \
+    static_assert( \
+      ::std::is_same<typename std::remove_cv<typename std::remove_reference<decltype(logger)>::type>::type, \
+      typename ::rclcpp::Logger>::value, \
+      "First argument to logging macros must be an rclcpp::Logger"); \
+ \
+    std::stringstream rclcpp_stream_ss_; \
+    rclcpp_stream_ss_ << stream_arg; \
+    RCUTILS_LOG_ERROR_NAMED( \
+      (logger).get_name(), \
+      "%s", rclcpp_stream_ss_.str().c_str()); \
+  } while (0)
+
+#define RCLCPP_INFO_STREAM(logger, stream_arg) \
+  do { \
+    static_assert( \
+      ::std::is_same<typename std::remove_cv<typename std::remove_reference<decltype(logger)>::type>::type, \
+      typename ::rclcpp::Logger>::value, \
+      "First argument to logging macros must be an rclcpp::Logger"); \
+ \
+    std::stringstream rclcpp_stream_ss_; \
+    rclcpp_stream_ss_ << stream_arg; \
+    RCUTILS_LOG_INFO_NAMED( \
+      (logger).get_name(), \
+      "%s", rclcpp_stream_ss_.str().c_str()); \
+  } while (0)
+
+#define RCLCPP_DEBUG_STREAM(logger, stream_arg) \
+  do { \
+    static_assert( \
+      ::std::is_same<typename std::remove_cv<typename std::remove_reference<decltype(logger)>::type>::type, \
+      typename ::rclcpp::Logger>::value, \
+      "First argument to logging macros must be an rclcpp::Logger"); \
+ \
+    std::stringstream rclcpp_stream_ss_; \
+    rclcpp_stream_ss_ << stream_arg; \
+    RCUTILS_LOG_DEBUG_NAMED( \
+      (logger).get_name(), \
+      "%s", rclcpp_stream_ss_.str().c_str()); \
+  } while (0)
+
+#endif
+
 namespace astra_camera {
 
 bool operator==(const openni::VideoMode& lhs, const openni::VideoMode& rhs);

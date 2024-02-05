@@ -32,8 +32,13 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
+#if defined(USE_ELOQUENT_VERSION) || defined(USE_DASHING_VERSION)
+#include <image_transport/image_transport.h>
+#include <image_transport/subscriber_filter.h>
+#else
 #include <image_transport/image_transport.hpp>
 #include <image_transport/subscriber_filter.hpp>
+#endif
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/exact_time.h>
