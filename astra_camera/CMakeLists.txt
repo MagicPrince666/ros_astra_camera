@@ -8,6 +8,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -fPIC -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC -g")
 set(CMAKE_BUILD_TYPE "Release")
+option(USE_RK_HW_DECODER "Use Rockchip hardware decoder" OFF)
+option(USE_NV_HW_DECODER "Use Nvidia hardware decoder" OFF)
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif ()
@@ -42,6 +44,9 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_sensor_msgs REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(LIBUVC REQUIRED libuvc)
+if (NOT LIBUVC_FOUND)
+  message(FATAL_ERROR "libuvc is not found")
+endif ()
 pkg_search_module(GLOG REQUIRED libglog)
 
 if (NOT GLOG_FOUND)
@@ -83,6 +88,45 @@ elseif ($ENV{ROS_DISTRO} MATCHES "noetic")
 elseif ($ENV{ROS_DISTRO} MATCHES "melodic")
   add_definitions(-DUSE_ROS_MELODIC_VERSION)
 endif()
+
+if (USE_RK_HW_DECODER)
+  pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
+  if (NOT RK_MPP_FOUND)
+    message(FATAL_ERROR "rockchip_mpp is not found")
+  endif ()
+  pkg_search_module(RGA librga)
+  if (NOT RGA_FOUND)
+    add_definitions(-DUSE_LIBYUV)
+    message("librga is not found, use libyuv instead")
+  endif ()
+endif ()
+
+if (USE_NV_HW_DECODER)
+  set(JETSON_MULTI_MEDIA_API_DIR /usr/src/jetson_multimedia_api)
+  set(JETSON_MULTI_MEDIA_API_CLASS_DIR ${JETSON_MULTI_MEDIA_API_DIR}/samples/common/classes)
+  set(JETSON_MULTI_MEDIA_API_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_DIR}/include/)
+  set(LIBJPEG8B_INCLUDE_DIR ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}/libjpeg-8b)
+  set(TEGRA_ARMABI /usr/lib/aarch64-linux-gnu/)
+  add_definitions(-DUSE_NV_HW_DECODER)
+  add_compile_options(-Wno-missing-field-initializers -Wno-unused-parameter)
+  set(NV_LIBRARIES
+    -lnvjpeg -lnvbufsurface -lnvbufsurftransform -lyuv -lv4l2
+  )
+  list(APPEND NV_LIBRARIES
+    -L${TEGRA_ARMABI} -L${TEGRA_ARMABI}/tegra)
+endif ()
+
+if (USE_RK_HW_DECODER)
+  list(APPEND COMMON_LIBRARIES
+    ${RK_MPP_LIBRARIES}
+    ${RGA_LIBRARIES}
+  )
+endif ()
+
+if (USE_NV_HW_DECODER)
+  list(APPEND COMMON_LIBRARIES
+    ${NV_LIBRARIES})
+endif ()
 
 set(dependencies
   ament_index_cpp
@@ -126,12 +170,52 @@ add_library(${PROJECT_NAME} SHARED
   src/clean_up_shm_node.cpp
   )
 
+if (USE_RK_HW_DECODER)
+  add_definitions(-DUSE_RK_HW_DECODER)
+  list(APPEND SOURCE_FILES src/rk_mpp_decoder.cpp)
+  list(APPEND COMMON_INCLUDE_DIRS
+    ${RK_MPP_INCLUDE_DIRS}
+    ${RGA_INCLUDE_DIRS}
+  )
+  list(APPEND COMMON_LIBRARIES
+    ${RGA_LIBRARIES}
+    ${RK_MPP_LIBRARIES}
+  )
+  if (NOT RGA_FOUND)
+    list(APPEND COMMON_LIBRARIES
+      -lyuv
+    )
+  endif ()
+endif ()
+
+if (USE_NV_HW_DECODER)
+  list(APPEND SOURCE_FILES src/jetson_nv_decoder.cpp)
+  list(APPEND COMMON_INCLUDE_DIRS ${JETSON_MULTI_MEDIA_API_INCLUDE_DIR}
+    ${LIBJPEG8B_INCLUDE_DIR})
+  # append jetson_multimedia_api source files
+  list(APPEND SOURCE_FILES
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvBuffer.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvElement.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvElementProfiler.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvJpegDecoder.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvJpegEncoder.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvLogging.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvUtils.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvV4l2Element.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvV4l2ElementPlane.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvVideoDecoder.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvVideoEncoder.cpp
+    ${JETSON_MULTI_MEDIA_API_CLASS_DIR}/NvBufSurface.cpp
+  )
+endif ()
+
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   ${OpenCV_INCLUDED_DIRS}
   ${GLOG_INCLUDED_DIRS}
+  ${libuvc_INCLUDE_DIRS}
   )
 
 ament_target_dependencies(${PROJECT_NAME}
@@ -141,7 +225,7 @@ target_link_libraries(${PROJECT_NAME}
   ${OpenCV_LIBS}
   Eigen3::Eigen
   ${GLOG_LIBRARIES}
-  uvc
+  ${LIBUVC_LIBRARIES}
   -lOpenNI2
   -L${ORBBEC_OPENNI2_REDIST}
   )
@@ -154,6 +238,7 @@ target_include_directories(list_devices_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   ${OpenCV_INCLUDED_DIRS}
+  ${libuvc_INCLUDE_DIRS}
   )
 
 ament_target_dependencies(list_devices_node
@@ -163,7 +248,7 @@ target_link_libraries(list_devices_node
   ${OpenCV_LIBS}
   Eigen3::Eigen
   ${GLOG_LIBRARIES}
-  uvc
+  ${LIBUVC_LIBRARIES}
   -lOpenNI2
   -L${ORBBEC_OPENNI2_REDIST}
   ${PROJECT_NAME}
