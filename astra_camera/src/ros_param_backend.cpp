@@ -20,8 +20,8 @@ ParametersBackend::~ParametersBackend() {
 #if !defined(USE_ELOQUENT_VERSION) && !defined(USE_DASHING_VERSION)
     node_->remove_on_set_parameters_callback(
         (rclcpp::node_interfaces::OnSetParametersCallbackHandle *)(ros_callback_.get()));
-#endif
     ros_callback_.reset();
+#endif
   }
 }
 
@@ -33,10 +33,7 @@ void ParametersBackend::addOnSetParametersCallback(
 #endif
     ) {
 #if defined(USE_ELOQUENT_VERSION) || defined(USE_DASHING_VERSION)
-  if(callback) {
-    // 待适配
-    // ros_callback_ = node_->set_on_parameters_set_callback((void)callback);
-  }
+  ros_callback_ = node_->set_on_parameters_set_callback(callback);
 #else
   ros_callback_ = node_->add_on_set_parameters_callback(callback);
 #endif

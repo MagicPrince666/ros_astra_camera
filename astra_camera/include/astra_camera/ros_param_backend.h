@@ -29,6 +29,10 @@ class ParametersBackend {
  private:
   rclcpp::Node* node_;
   rclcpp::Logger logger_;
+#if defined(USE_ELOQUENT_VERSION) || defined(USE_DASHING_VERSION)
+  rclcpp::Node::OnParametersSetCallbackType ros_callback_;
+#else
   std::shared_ptr<void> ros_callback_;
+#endif
 };
 }  // namespace astra_camera
