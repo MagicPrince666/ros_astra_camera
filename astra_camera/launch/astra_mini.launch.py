@@ -14,7 +14,7 @@ def generate_launch_description():
         config_params = yaml.safe_load(file)
     ROS_DISTRO = os.getenv('ROS_DISTRO')
     print("Current ROS2 Version: ",ROS_DISTRO)
-    if ROS_DISTRO == 'humble' or ROS_DISTRO == 'foxy' or ROS_DISTRO == 'iron':
+    if ROS_DISTRO == 'humble' or ROS_DISTRO == 'galactic' or ROS_DISTRO == 'foxy' or ROS_DISTRO == 'iron':
         container = ComposableNodeContainer(
             name='astra_camera_container',
             namespace='',
