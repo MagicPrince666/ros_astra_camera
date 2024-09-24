@@ -726,7 +726,7 @@ struct enable_if_enum {};
 template <typename R>
 struct enable_if_enum<true, R> {
   using type = R;
-#if !defined(USE_ELOQUENT_VERSION) && !defined(USE_DASHING_VERSION)
+#if __GNUC__ > 8
   static_assert(supported<R>::value, "magic_enum unsupported compiler (https://github.com/Neargye/magic_enum#compiler-compatibility).");
 #endif
 };
