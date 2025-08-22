@@ -9,7 +9,7 @@ import yaml
 import os
 
 def generate_launch_description():
-    namespace = LaunchConfiguration('namespace')
+    namespace = 'namespace'
     params_file = get_package_share_directory(
         "astra_camera") + "/params/astra_mini_params.yaml"
     with open(params_file, 'r') as file:
